@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* França */
+  --brand-blue: 0 85 164; /* #0055A4 */
+  --brand-red: 239 65 53; /* #EF4135 */
+
+  /* Amarelo / Rosa */
+  --accent-yellow: 255 210 63; /* #FFD23F */
+  --accent-pink: 255 105 180; /* #FF69B4 */
+
+  /* UI */
+  --bg: 248 250 252; /* slate-50 */
+  --fg: 15 23 42; /* slate-900 */
+  --card: 255 255 255;
+  --border: 226 232 240; /* slate-200 */
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  color: rgb(var(--fg));
+  background:
+    radial-gradient(1200px 700px at 15% 10%, rgba(0, 85, 164, 0.18), transparent 60%),
+    radial-gradient(900px 600px at 90% 20%, rgba(255, 210, 63, 0.20), transparent 55%),
+    radial-gradient(900px 600px at 70% 95%, rgba(255, 105, 180, 0.16), transparent 55%),
+    radial-gradient(1000px 700px at 10% 90%, rgba(239, 65, 53, 0.12), transparent 55%),
+    rgb(var(--bg));
+}
+
+::selection {
+  background: rgba(255, 210, 63, 0.35);
+}
+

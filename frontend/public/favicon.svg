@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Les Frangines">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0055A4"/>
+      <stop offset="0.5" stop-color="#FFD23F"/>
+      <stop offset="1" stop-color="#EF4135"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#g)"/>
+  <path d="M20 44V20h8c6 0 10 3 10 9 0 5-3 8-9 8h-3v7h-6zm6-12h2c3 0 4-1 4-3 0-2-1-3-4-3h-2v6z" fill="#ffffff" opacity="0.95"/>
+  <circle cx="46" cy="20" r="6" fill="#FF69B4" opacity="0.9"/>
+</svg>
+
