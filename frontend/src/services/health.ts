@@ -1,4 +1,4 @@
-import { getDjangoBaseUrl } from "@/services/django";
+import { djangoApi } from './django-api';
 
 export type BackendHealth = {
   status: string;
@@ -9,23 +9,15 @@ export type HealthResult =
   | { ok: false; url: string; error: string };
 
 export async function fetchBackendHealth(): Promise<HealthResult> {
-  const url = `${getDjangoBaseUrl()}/api/health/`;
+  const url = `${djangoApi.defaults.baseURL}/api/health/`;
 
   try {
-    const res = await fetch(url, {
-      method: "GET",
-      headers: { accept: "application/json" },
-      cache: "no-store"
-    });
-
-    if (!res.ok) {
-      return { ok: false, url, error: `HTTP ${res.status}` };
-    }
-
-    const data = (await res.json()) as BackendHealth;
-    return { ok: true, url, data };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Erro desconhecido";
+    const response = await djangoApi.get<BackendHealth>('/api/health/');
+    return { ok: true, url, data: response.data };
+  } catch (error: any) {
+    const message = error.response?.status 
+      ? `HTTP ${error.response.status}` 
+      : error.message || 'Erro desconhecido';
     return { ok: false, url, error: message };
   }
 }

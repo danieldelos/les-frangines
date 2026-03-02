@@ -1,18 +1,31 @@
-import { HealthCard } from "@/components/HealthCard";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+import { LoadingState } from "@/components/LoadingState";
+import { useAuth } from "@/lib/auth";
 
 export default function AppHomePage() {
-  return (
-    <div className="grid gap-6">
-      <section className="rounded-2xl border border-border bg-white/70 p-6 shadow-soft backdrop-blur">
-        <h1 className="text-xl font-semibold tracking-tight text-slate-900">Dashboard</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Base para evoluir permissões (admin/professor/aluno), repositório pedagógico,
-          agendamento e financeiro.
-        </p>
-      </section>
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
-      <HealthCard />
-    </div>
-  );
+  useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+    if (user.role === "admin") {
+      router.replace("/dashboard/admin");
+      return;
+    }
+    if (user.role === "professor") {
+      router.replace("/dashboard/professor");
+      return;
+    }
+    router.replace("/dashboard/aluno");
+  }, [loading, user, router]);
+
+  return <LoadingState />;
 }
-

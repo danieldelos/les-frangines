@@ -14,11 +14,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR">
       <body className={inter.className}>
-        <div className="min-h-screen">
+        <div className="min-h-screen w-full">
           <Header />
-          <main className="mx-auto w-full max-w-5xl px-6 py-10">{children}</main>
-          <footer className="mx-auto w-full max-w-5xl px-6 pb-10 text-sm text-slate-600">
-            <div className="border-t border-border pt-6">
+          <main className="w-full min-h-[calc(100vh-80px)]">
+            {children}
+          </main>
+          <footer className="w-full bg-white border-t border-slate-200 px-4 sm:px-6 lg:px-8 py-6 text-sm text-slate-600">
+            <div className="mx-auto max-w-7xl">
               <span className="font-medium">Les Frangines</span>{" "}
               <span className="text-slate-500">• Next.js 14 + Django</span>
             </div>
@@ -28,4 +30,3 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
-

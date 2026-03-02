@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { LogoutButton } from "@/components/LogoutButton";
+
 const items: Array<{ href: string; label: string }> = [
   { href: "/app", label: "Dashboard" },
   { href: "/app/repositorio", label: "Repositório" },
@@ -24,10 +26,12 @@ export function AppNav() {
           </Link>
         ))}
       </nav>
-      <div className="mt-4 rounded-xl border border-border bg-bg p-3 text-xs text-slate-600">
-        Protótipo inicial (sem autenticação).
+      <div className="mt-4 grid gap-3">
+        <div className="rounded-xl border border-border bg-bg p-3 text-xs text-slate-600">
+          Protótipo inicial.
+        </div>
+        <LogoutButton />
       </div>
     </aside>
   );
 }
-
