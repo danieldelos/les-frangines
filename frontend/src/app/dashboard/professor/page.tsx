@@ -1,11 +1,24 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { create } from "zustand";
 import { addHours, parseISO } from "date-fns";
+import {
+  FiBook,
+  FiCalendar,
+  FiCheck,
+  FiClock,
+  FiFileText,
+  FiHeadphones,
+  FiLink,
+  FiPlus,
+  FiUser,
+  FiVideo,
+  FiX,
+  FiXCircle
+} from "react-icons/fi";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import { LoadingState } from "@/components/LoadingState";
 import { Sidebar } from "@/components/Sidebar";
@@ -391,55 +404,78 @@ export default function DashboardPage() {
     router.push(`/repository/${studentId}`);
   };
 
+  const materialTypeIcon = (type: MaterialType) => {
+    const map: Record<MaterialType, React.ReactNode> = {
+      pdf: <FiFileText className="h-4 w-4" />,
+      video: <FiVideo className="h-4 w-4" />,
+      audio: <FiHeadphones className="h-4 w-4" />,
+      link: <FiLink className="h-4 w-4" />
+    };
+    return map[type];
+  };
+
+  const progressLabel: Record<ProgressStatus, string> = {
+    inicial: "Inicial",
+    intermediario: "Intermediário",
+    avancado: "Avançado"
+  };
+  const progressColor: Record<ProgressStatus, string> = {
+    inicial: "bg-amber-50 text-amber-700 border-amber-200",
+    intermediario: "bg-blue-50 text-blue-700 border-blue-200",
+    avancado: "bg-green-50 text-green-700 border-green-200"
+  };
+
   return (
-    <div className="px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+    <div className="px-4 pt-6 sm:px-6 lg:px-8">
       <div className="flex min-h-[calc(100vh-80px)] flex-col gap-6 lg:flex-row lg:items-stretch">
         <Sidebar />
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 min-w-0 space-y-4">
         <section className="rounded-2xl border border-border bg-white/70 p-6 shadow-soft backdrop-blur">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h1 className="text-xl font-semibold tracking-tight text-slate-900">
-                Dashboard do professor
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                Painel do Professor
               </h1>
               <p className="mt-1 text-sm text-slate-600">
                 Gestão de alunos, repositório e agenda.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setAvailabilityOpen(true)}
-              className="inline-flex h-10 items-center justify-center rounded-xl bg-belgium-black px-4 text-sm font-semibold text-white hover:bg-belgium-black/90"
-            >
-              Adicionar Disponibilidade
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setMaterialOpen(true)}
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <FiPlus className="h-4 w-4" />
+                Material
+              </button>
+              <button
+                type="button"
+                onClick={() => setAvailabilityOpen(true)}
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-belgium-black px-4 text-sm font-semibold text-white hover:bg-belgium-black/90 transition-colors"
+              >
+                <FiCalendar className="h-4 w-4" />
+                Disponibilidade
+              </button>
+            </div>
           </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-border bg-white p-4">
-              <div className="text-xs font-semibold tracking-wide text-slate-500">
-                Aulas agendadas
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {[
+              { label: "Aulas agendadas", count: lessons.filter((l: LessonItem) => l.status === "agendada").length, icon: FiClock, iconBg: "bg-blue-50", iconColor: "text-blue-600" },
+              { label: "Aulas concluídas", count: lessons.filter((l: LessonItem) => l.status === "concluida").length, icon: FiCheck, iconBg: "bg-green-50", iconColor: "text-green-600" },
+              { label: "Aulas canceladas", count: lessons.filter((l: LessonItem) => l.status === "cancelada").length, icon: FiXCircle, iconBg: "bg-rose-50", iconColor: "text-rose-600" }
+            ].map((m) => (
+              <div key={m.label} className="rounded-xl border border-border bg-white p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold tracking-wide text-slate-500">{m.label}</span>
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${m.iconBg}`}>
+                    <m.icon className={`h-4 w-4 ${m.iconColor}`} />
+                  </div>
+                </div>
+                <div className="mt-2 text-2xl font-bold text-slate-900">{m.count}</div>
               </div>
-              <div className="mt-2 text-lg font-semibold text-slate-900">
-                {lessons.filter((lesson: LessonItem) => lesson.status === "agendada").length}
-              </div>
-            </div>
-            <div className="rounded-xl border border-border bg-white p-4">
-              <div className="text-xs font-semibold tracking-wide text-slate-500">
-                Aulas concluídas
-              </div>
-              <div className="mt-2 text-lg font-semibold text-slate-900">
-                {lessons.filter((lesson: LessonItem) => lesson.status === "concluida").length}
-              </div>
-            </div>
-            <div className="rounded-xl border border-border bg-white p-4">
-              <div className="text-xs font-semibold tracking-wide text-slate-500">
-                Aulas canceladas
-              </div>
-              <div className="mt-2 text-lg font-semibold text-slate-900">
-                {lessons.filter((lesson: LessonItem) => lesson.status === "cancelada").length}
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 
@@ -477,37 +513,37 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-4 lg:grid-cols-2">
-                {filteredStudents.map((student: StudentCard) => (
+              <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                {filteredStudents.length === 0 ? (
+                  <div className="col-span-2 py-8 text-center text-sm text-slate-500">Nenhum aluno encontrado.</div>
+                ) : filteredStudents.map((student: StudentCard) => (
                   <div
                     key={student.id}
-                    className="flex items-center gap-4 rounded-2xl border border-border bg-white p-4"
+                    className="flex items-center gap-4 rounded-2xl border border-border bg-white p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
                   >
-                    <Image
-                      src={student.avatarUrl}
-                      alt={student.name}
-                      width={48}
-                      height={48}
-                      className="h-12 w-12 rounded-xl object-cover"
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold text-slate-900">
+                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100">
+                      <FiUser className="h-6 w-6 text-slate-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-slate-900 truncate">
                         {student.name}
                       </div>
-                      <div className="text-xs text-slate-600">
-                        Progresso: {student.progressStatus}
+                      <div className="mt-1">
+                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${progressColor[student.progressStatus]}`}>
+                          {progressLabel[student.progressStatus]}
+                        </span>
                       </div>
                       <div className="mt-1 text-xs text-slate-500">
-                        Última aula: {student.lastLesson} • Próxima aula:{" "}
-                        {student.nextLesson}
+                        Última: {student.lastLesson} · Próxima: {student.nextLesson}
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => onRepositoryRedirect(student.id)}
-                      className="inline-flex h-9 items-center justify-center rounded-xl border border-border px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="flex-shrink-0 inline-flex h-9 items-center gap-1.5 justify-center rounded-xl border border-border px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                     >
-                      Ver Repositório
+                      <FiBook className="h-3.5 w-3.5" />
+                      Repositório
                     </button>
                   </div>
                 ))}
@@ -550,27 +586,35 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-3">
-                {filteredMaterials.map((material: MaterialItem) => {
+              <div className="mt-5 grid gap-3">
+                {filteredMaterials.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-slate-500">Nenhum material encontrado.</div>
+                ) : filteredMaterials.map((material: MaterialItem) => {
                   const student = students.find((item: StudentCard) => item.id === material.studentId);
                   return (
                     <div
                       key={material.id}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-white p-4"
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:bg-slate-50/50"
                     >
-                      <div>
-                        <div className="text-sm font-semibold text-slate-900">
-                          {material.title}
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                          {materialTypeIcon(material.type)}
                         </div>
-                        <div className="text-xs text-slate-600">
-                          {student?.name ?? "Aluno"} • {material.type.toUpperCase()}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          Atualizado em {material.updatedAt}
+                        <div>
+                          <div className="text-sm font-semibold text-slate-900">
+                            {material.title}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {student?.name ?? "Aluno"} · {material.type.toUpperCase()} · {material.updatedAt}
+                          </div>
                         </div>
                       </div>
-                      <span className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-slate-700">
-                        {material.status}
+                      <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${
+                        material.status === "concluido"
+                          ? "bg-green-50 text-green-700 border-green-200"
+                          : "bg-amber-50 text-amber-700 border-amber-200"
+                      }`}>
+                        {material.status === "concluido" ? "Concluído" : "Pendente"}
                       </span>
                     </div>
                   );
@@ -628,23 +672,23 @@ export default function DashboardPage() {
       </div>
 
       {materialOpen ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-6">
-          <div className="w-full max-w-lg rounded-2xl border border-border bg-white p-6 shadow-xl">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-border bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-semibold text-slate-900">Adicionar Material</h3>
               <button
                 type="button"
                 onClick={() => setMaterialOpen(false)}
-                className="text-sm text-slate-600"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
               >
-                Fechar
+                <FiX className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={onMaterialSubmit} className="mt-4 grid gap-4">
-              <div className="grid gap-1">
-                <label className="text-xs font-semibold text-slate-600">Aluno</label>
+            <form onSubmit={onMaterialSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Aluno</label>
                 <select
-                  className="h-10 rounded-xl border border-border bg-white px-3 text-sm"
+                  className="h-10 w-full rounded-xl border border-border bg-white px-3 text-sm outline-none focus:border-slate-400"
                   {...materialForm.register("studentId")}
                 >
                   <option value="">Selecione</option>
@@ -655,17 +699,18 @@ export default function DashboardPage() {
                   ))}
                 </select>
               </div>
-              <div className="grid gap-1">
-                <label className="text-xs font-semibold text-slate-600">Título</label>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Título</label>
                 <input
-                  className="h-10 rounded-xl border border-border bg-white px-3 text-sm"
+                  className="h-10 w-full rounded-xl border border-border bg-white px-3 text-sm outline-none focus:border-slate-400"
+                  placeholder="Ex: Unit 3 – Listening"
                   {...materialForm.register("title")}
                 />
               </div>
-              <div className="grid gap-1">
-                <label className="text-xs font-semibold text-slate-600">Tipo</label>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Tipo</label>
                 <select
-                  className="h-10 rounded-xl border border-border bg-white px-3 text-sm"
+                  className="h-10 w-full rounded-xl border border-border bg-white px-3 text-sm outline-none focus:border-slate-400"
                   {...materialForm.register("type")}
                 >
                   <option value="pdf">PDF</option>
@@ -674,17 +719,17 @@ export default function DashboardPage() {
                   <option value="link">Link</option>
                 </select>
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => setMaterialOpen(false)}
-                  className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex h-10 items-center justify-center rounded-xl bg-belgium-black px-4 text-sm font-semibold text-white hover:bg-belgium-black/90"
+                  className="inline-flex h-10 items-center justify-center rounded-xl bg-belgium-black px-4 text-sm font-semibold text-white hover:bg-belgium-black/90 transition-colors"
                 >
                   Salvar
                 </button>
@@ -695,60 +740,60 @@ export default function DashboardPage() {
       ) : null}
 
       {availabilityOpen ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-6">
-          <div className="w-full max-w-lg rounded-2xl border border-border bg-white p-6 shadow-xl">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-border bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-semibold text-slate-900">
                 Adicionar Disponibilidade
               </h3>
               <button
                 type="button"
                 onClick={() => setAvailabilityOpen(false)}
-                className="text-sm text-slate-600"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
               >
-                Fechar
+                <FiX className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={onAvailabilitySubmit} className="mt-4 grid gap-4">
-              <div className="grid gap-1">
-                <label className="text-xs font-semibold text-slate-600">Data</label>
+            <form onSubmit={onAvailabilitySubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Data</label>
                 <input
                   type="date"
-                  className="h-10 rounded-xl border border-border bg-white px-3 text-sm"
+                  className="h-10 w-full rounded-xl border border-border bg-white px-3 text-sm outline-none focus:border-slate-400"
                   {...availabilityForm.register("date")}
                 />
               </div>
-              <div className="grid gap-1">
-                <label className="text-xs font-semibold text-slate-600">Início</label>
-                <input
-                  type="time"
-                  className="h-10 rounded-xl border border-border bg-white px-3 text-sm"
-                  {...availabilityForm.register("start")}
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Início</label>
+                  <input
+                    type="time"
+                    className="h-10 w-full rounded-xl border border-border bg-white px-3 text-sm outline-none focus:border-slate-400"
+                    {...availabilityForm.register("start")}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Duração (h)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={6}
+                    className="h-10 w-full rounded-xl border border-border bg-white px-3 text-sm outline-none focus:border-slate-400"
+                    {...availabilityForm.register("duration", { valueAsNumber: true })}
+                  />
+                </div>
               </div>
-              <div className="grid gap-1">
-                <label className="text-xs font-semibold text-slate-600">
-                  Duração (h)
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={6}
-                  className="h-10 rounded-xl border border-border bg-white px-3 text-sm"
-                  {...availabilityForm.register("duration", { valueAsNumber: true })}
-                />
-              </div>
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => setAvailabilityOpen(false)}
-                  className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex h-10 items-center justify-center rounded-xl bg-belgium-black px-4 text-sm font-semibold text-white hover:bg-belgium-black/90"
+                  className="inline-flex h-10 items-center justify-center rounded-xl bg-belgium-black px-4 text-sm font-semibold text-white hover:bg-belgium-black/90 transition-colors"
                 >
                   Salvar
                 </button>

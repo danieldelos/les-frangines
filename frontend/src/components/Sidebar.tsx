@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   FiActivity,
+  FiBook,
   FiChevronLeft,
   FiChevronRight,
   FiDollarSign,
@@ -23,6 +24,9 @@ type NavItem = { href: string; label: string; icon: React.ReactNode };
 const navByRole: Record<"admin" | "professor" | "aluno", NavItem[]> = {
   admin: [
     { href: "/dashboard/admin", label: "Visão geral", icon: <FiHome className="h-4 w-4" /> },
+    { href: "/dashboard/admin?tab=students", label: "Alunos", icon: <FiUser className="h-4 w-4" /> },
+    { href: "/dashboard/admin?tab=professors", label: "Professores", icon: <FiUsers className="h-4 w-4" /> },
+    { href: "/dashboard/admin?tab=turmas", label: "Turmas", icon: <FiBook className="h-4 w-4" /> },
     { href: "/dashboard/admin/finance", label: "Financeiro", icon: <FiDollarSign className="h-4 w-4" /> },
     {
       href: "/dashboard/admin/finance/contas-pagar",
@@ -38,8 +42,7 @@ const navByRole: Record<"admin" | "professor" | "aluno", NavItem[]> = {
       href: "/dashboard/admin/finance/fluxo-caixa",
       label: "Fluxo de caixa",
       icon: <FiActivity className="h-4 w-4" />
-    },
-    { href: "/dashboard/admin", label: "Usuários", icon: <FiUsers className="h-4 w-4" /> }
+    }
   ],
   professor: [
     { href: "/dashboard/professor", label: "Alunos", icon: <FiUsers className="h-4 w-4" /> }
@@ -61,7 +64,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`relative flex h-full min-h-[calc(100vh-80px)] flex-col self-stretch rounded-2xl border border-border bg-white/70 shadow-soft backdrop-blur motion-reduce:transition-none transition-all duration-300 ${
+      className={`sticky top-16 flex lg:max-h-[calc(100vh-4.5rem)] flex-col overflow-y-auto self-stretch rounded-2xl border border-border bg-white/70 shadow-soft backdrop-blur motion-reduce:transition-none transition-all duration-300 ${
         collapsed ? "w-full p-3 lg:w-20" : "w-full p-4 lg:w-64"
       }`}
     >

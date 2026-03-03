@@ -4,16 +4,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { create } from "zustand";
-import {
-  differenceInHours,
-  parseISO
-} from "date-fns";
+import { parseISO } from "date-fns";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import { LoadingState } from "@/components/LoadingState";
 import { useAuth } from "@/lib/auth";
 import { DashboardCard } from "@/components/DashboardCard";
 import { CalendarView } from "@/components/Calendar/CalendarView";
-import { LogoutButton } from "@/components/LogoutButton";
+import { Sidebar } from "@/components/Sidebar";
 import { useCalendarSetEvents } from "@/hooks/useCalendar";
 import { CalendarEvent } from "@/types/calendar";
 import { 
@@ -370,26 +367,28 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-6">
+    <div className="px-4 pt-6 sm:px-6 lg:px-8">
+      <div className="flex min-h-[calc(100vh-80px)] flex-col gap-6 lg:flex-row lg:items-stretch">
+        <Sidebar />
+        <div className="flex-1 min-w-0 space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="rounded-2xl border border-border bg-white/70 p-6 shadow-soft backdrop-blur">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-              Bem-vindo(a), {profile.name}
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              Bem-vindo(a), {profile.name.split(' ')[0]}!
             </h1>
-            <p className="text-sm sm:text-base text-slate-600 mt-1">
-              Acompanhe seu progresso e próximas atividades
+            <p className="text-sm text-slate-600 mt-1">
+              Acompanhe seu progresso e próximas atividades.
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <LogoutButton redirectTo="/" fullWidth={false} />
             <div className="text-right">
-              <p className="text-sm text-slate-600">Professor(a)</p>
-              <p className="font-semibold text-slate-900">{profile.professor}</p>
+              <p className="text-xs font-semibold text-slate-500">Professor(a)</p>
+              <p className="text-sm font-semibold text-slate-900">{profile.professor}</p>
             </div>
-            <div className="h-12 w-12 bg-slate-100 rounded-full flex items-center justify-center">
-              <FiUser className="w-6 h-6 text-slate-600" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100">
+              <FiUser className="h-5 w-5 text-slate-600" />
             </div>
           </div>
         </div>
@@ -430,29 +429,32 @@ export default function DashboardPage() {
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="rounded-2xl border border-border bg-white/70 p-6 shadow-soft backdrop-blur">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900">Seu Progresso</h2>
-          <span className="text-sm font-medium text-slate-600">{profile.progress}%</span>
+          <span className="text-sm font-semibold text-slate-700">{profile.progress}%</span>
         </div>
-        <div className="w-full bg-slate-100 rounded-full h-3">
+        <div className="w-full bg-slate-100 rounded-full h-2.5">
           <div 
-            className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+            className="bg-gradient-to-r from-brand-secondary to-blue-400 h-2.5 rounded-full transition-all duration-500"
             style={{ width: `${profile.progress}%` }}
           />
         </div>
-        <p className="text-sm text-slate-600 mt-2">
-          Você está a {100 - profile.progress}% de concluir seu curso!
+        <p className="text-sm text-slate-500 mt-2">
+          {100 - profile.progress > 0 ? `Faltam ${100 - profile.progress}% para concluir seu curso!` : 'Curso concluído! Parabéns!'}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Materials Section */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-slate-900">Materiais Pedagógicos</h2>
+        <div className="rounded-2xl border border-border bg-white/70 p-6 shadow-soft backdrop-blur">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Materiais Pedagógicos</h2>
+              <p className="text-xs text-slate-500 mt-0.5">{completedMaterialsCount} de {materials.length} concluídos</p>
+            </div>
             <select
-              className="text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="h-9 rounded-xl border border-border bg-white px-3 text-sm outline-none focus:border-slate-400"
               {...filterForm.register("materialType")}
             >
               <option value="all">Todos</option>
@@ -463,43 +465,38 @@ export default function DashboardPage() {
             </select>
           </div>
 
-          <div className="space-y-3">
-            {filteredMaterials.map((material) => (
+          <div className="space-y-2">
+            {filteredMaterials.length === 0 ? (
+              <p className="py-6 text-center text-sm text-slate-500">Nenhum material encontrado.</p>
+            ) : filteredMaterials.map((material) => (
               <div 
                 key={material.id}
-                className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                className="flex items-center justify-between p-3 rounded-xl border border-border bg-white hover:bg-slate-50/60 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  {getMaterialIcon(material.type)}
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100">
+                    {getMaterialIcon(material.type)}
+                  </div>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-medium text-slate-900 truncate">
-                      {material.title}
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      {material.type.toUpperCase()} • {material.uploadedAt}
-                    </p>
+                    <h3 className="text-sm font-medium text-slate-900 truncate">{material.title}</h3>
+                    <p className="text-xs text-slate-500">{material.type.toUpperCase()} · {material.uploadedAt}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2 ml-2">
-                  <span className={`
-                    inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border
-                    ${getStatusColor(material.status)}
-                  `}>
+                <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
+                  <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${getStatusColor(material.status)}`}>
                     {getStatusLabel(material.status)}
                   </span>
-                  
                   <button
                     onClick={() => onCompleteMaterial(material.id)}
                     disabled={material.status === "concluido"}
-                    className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-lg p-1.5 text-slate-500 hover:text-green-600 hover:bg-green-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     title={material.status === "concluido" ? "Concluído" : "Marcar como concluído"}
                   >
                     <FiCheckCircle className="w-4 h-4" />
                   </button>
-                  
                   <button
-                    className="p-2 text-slate-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                    className="rounded-lg p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                     title="Download"
                   >
                     <FiDownload className="w-4 h-4" />
@@ -511,52 +508,51 @@ export default function DashboardPage() {
         </div>
 
         {/* Next Lessons Section */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-slate-900">Próximas Aulas</h2>
+        <div className="rounded-2xl border border-border bg-white/70 p-6 shadow-soft backdrop-blur">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Próximas Aulas</h2>
+              <p className="text-xs text-slate-500 mt-0.5">{upcomingLessons.length} agendada{upcomingLessons.length !== 1 ? "s" : ""}</p>
+            </div>
             <button
               onClick={onScheduleLesson}
-              className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-belgium-black px-3 text-xs font-semibold text-white hover:bg-belgium-black/90 transition-colors"
             >
-              Agendar Aula
+              <FiClock className="h-3.5 w-3.5" />
+              Agendar
             </button>
           </div>
 
-          <div className="space-y-4">
-            {upcomingLessons.map((lesson) => (
+          <div className="space-y-2">
+            {upcomingLessons.length === 0 ? (
+              <p className="py-6 text-center text-sm text-slate-500">Nenhuma aula agendada.</p>
+            ) : upcomingLessons.map((lesson) => (
               <div 
                 key={lesson.id}
-                className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                className="flex items-center justify-between p-3 rounded-xl border border-border bg-white hover:bg-slate-50/60 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <FiCalendar className="w-5 h-5 text-blue-600" />
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-blue-50">
+                    <FiCalendar className="h-4 w-4 text-blue-600" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-medium text-slate-900 truncate">
-                      {lesson.title}
-                    </h3>
+                    <h3 className="text-sm font-medium text-slate-900 truncate">{lesson.title}</h3>
                     <p className="text-xs text-slate-500">
-                      {new Date(lesson.start).toLocaleDateString('pt-BR', { 
-                        weekday: 'long', 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })} • {lesson.professor}
+                      {new Date(lesson.start).toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · {lesson.professor}
                     </p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2 ml-2">
+                <div className="flex items-center gap-1 ml-2 flex-shrink-0">
                   <button
-                    className="p-2 text-slate-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                    className="rounded-lg p-1.5 text-slate-500 hover:text-green-600 hover:bg-green-50 transition-colors"
                     title="Entrar na aula"
                   >
                     <FiPlay className="w-4 h-4" />
                   </button>
-                  
                   <button
                     onClick={() => onCancelLesson(lesson.id)}
-                    className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="rounded-lg p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                     title="Cancelar aula"
                   >
                     <FiX className="w-4 h-4" />
@@ -569,15 +565,17 @@ export default function DashboardPage() {
       </div>
 
       {/* Calendar Section */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-6">Calendário de Aulas</h2>
-        <div className="h-96 rounded-lg border border-slate-200 overflow-hidden">
+      <div className="rounded-2xl border border-border bg-white/70 p-6 shadow-soft backdrop-blur">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">Calendário de Aulas</h2>
+        <div className="h-96 rounded-xl border border-border overflow-hidden">
           <CalendarView
             className="w-full"
             height="100%"
             enableFilters={false}
             enableResources={false}
           />
+        </div>
+      </div>
         </div>
       </div>
     </div>
