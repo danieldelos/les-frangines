@@ -5,15 +5,17 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from academy.models import Lesson, Material, StudentProfile
+from academy.models import Lesson, Material, StudentProfile, Turma
 from academy.permissions import IsAdmin, IsAluno, IsProfessor
 from academy.serializers import (
     AdminUserSerializer,
+    AdminUserUpdateSerializer,
     AssignStudentsSerializer,
     LessonSerializer,
     MaterialSerializer,
     ProfessorStudentSerializer,
     StudentProfileSerializer,
+    TurmaSerializer,
     UserCreateSerializer,
 )
 
@@ -75,7 +77,146 @@ class AdminUserListCreateView(APIView):
             role=data["role"],
         )
 
+        if data["role"] == User.Role.ALUNO:
+            professor_id = data.get("professor_id")
+            turma_id = data.get("turma_id")
+            if professor_id or turma_id:
+                profile, _ = StudentProfile.objects.get_or_create(user=user)
+                if professor_id:
+                    professor = User.objects.filter(id=professor_id, role=User.Role.PROFESSOR).first()
+                    if professor:
+                        profile.professor = professor
+                if turma_id:
+                    turma = Turma.objects.filter(id=turma_id).first()
+                    if turma:
+                        profile.turma = turma
+                profile.save()
+
         return Response(AdminUserSerializer(user).data, status=status.HTTP_201_CREATED)
+
+
+class AdminUserDetailView(APIView):
+    permission_classes = [IsAdmin]
+
+    def get(self, request, user_id: int):
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return Response({"detail": "Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(AdminUserSerializer(user).data)
+
+    def patch(self, request, user_id: int):
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return Response({"detail": "Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AdminUserUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        if "first_name" in data:
+            user.first_name = data["first_name"]
+        if "last_name" in data:
+            user.last_name = data["last_name"]
+        if "email" in data:
+            new_email = data["email"].strip().lower()
+            if new_email != user.email and User.objects.filter(Q(username=new_email) | Q(email=new_email)).exclude(id=user_id).exists():
+                return Response({"detail": "Email já em uso."}, status=status.HTTP_400_BAD_REQUEST)
+            user.email = new_email
+            user.username = new_email
+        if "role" in data:
+            user.role = data["role"]
+        if "status" in data:
+            user.is_active = data["status"] == "ativo"
+        user.save()
+
+        if user.role == User.Role.ALUNO and ("professor_id" in data or "turma_id" in data):
+            profile, _ = StudentProfile.objects.get_or_create(user=user)
+            if "professor_id" in data:
+                professor_id = data["professor_id"]
+                if professor_id:
+                    professor = User.objects.filter(id=professor_id, role=User.Role.PROFESSOR).first()
+                    profile.professor = professor
+                else:
+                    profile.professor = None
+            if "turma_id" in data:
+                turma_id = data["turma_id"]
+                if turma_id:
+                    turma = Turma.objects.filter(id=turma_id).first()
+                    profile.turma = turma
+                else:
+                    profile.turma = None
+            profile.save()
+
+        return Response(AdminUserSerializer(user).data)
+
+    def delete(self, request, user_id: int):
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return Response({"detail": "Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        if user == request.user:
+            return Response({"detail": "Não é possível excluir o próprio usuário."}, status=status.HTTP_400_BAD_REQUEST)
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AdminTurmaListCreateView(APIView):
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        search = request.query_params.get("search", "").strip()
+        professor_id = request.query_params.get("professor_id")
+        qs = Turma.objects.select_related("professor").all().order_by("-created_at")
+        if search:
+            qs = qs.filter(Q(name__icontains=search) | Q(description__icontains=search))
+        if professor_id:
+            qs = qs.filter(professor_id=professor_id)
+        return Response(TurmaSerializer(qs, many=True).data)
+
+    def post(self, request):
+        serializer = TurmaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        professor = data.get("professor")
+        if professor and professor.role != User.Role.PROFESSOR:
+            return Response({"detail": "O usuário selecionado não é professor."}, status=status.HTTP_400_BAD_REQUEST)
+        turma = Turma.objects.create(
+            name=data["name"],
+            description=data.get("description", ""),
+            professor=professor,
+        )
+        return Response(TurmaSerializer(turma).data, status=status.HTTP_201_CREATED)
+
+
+class AdminTurmaDetailView(APIView):
+    permission_classes = [IsAdmin]
+
+    def get(self, request, turma_id: int):
+        turma = Turma.objects.filter(id=turma_id).first()
+        if not turma:
+            return Response({"detail": "Turma não encontrada."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(TurmaSerializer(turma).data)
+
+    def patch(self, request, turma_id: int):
+        turma = Turma.objects.filter(id=turma_id).first()
+        if not turma:
+            return Response({"detail": "Turma não encontrada."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = TurmaSerializer(turma, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        professor = data.get("professor", turma.professor)
+        if professor and professor.role != User.Role.PROFESSOR:
+            return Response({"detail": "O usuário selecionado não é professor."}, status=status.HTTP_400_BAD_REQUEST)
+        for attr, value in data.items():
+            setattr(turma, attr, value)
+        turma.save()
+        return Response(TurmaSerializer(turma).data)
+
+    def delete(self, request, turma_id: int):
+        turma = Turma.objects.filter(id=turma_id).first()
+        if not turma:
+            return Response({"detail": "Turma não encontrada."}, status=status.HTTP_404_NOT_FOUND)
+        turma.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AssignStudentsView(APIView):

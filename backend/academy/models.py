@@ -2,12 +2,35 @@ from django.conf import settings
 from django.db import models
 
 
+class Turma(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
+    professor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="turmas",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class StudentProfile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="student_profile"
     )
     professor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="students",
+    )
+    turma = models.ForeignKey(
+        Turma,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
